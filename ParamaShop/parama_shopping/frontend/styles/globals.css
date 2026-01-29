@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: #0f172a;
+  --background: #f7f5f0;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --accent: #f97316;
+  --accent-strong: #ea580c;
+}
+
+body {
+  color: var(--foreground);
+  background: radial-gradient(1200px circle at top, #ffffff 0%, #f7f5f0 55%, #f3efe7 100%);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
