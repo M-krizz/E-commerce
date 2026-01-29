@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+venv*/
+ENV/
+.env
+*.sqlite3
+*.db
+*.log
+*.pot
+*.pyc
+*.pkl
+*.mypy_cache/
+*.pytest_cache/
+
+# VSCode
+.vscode/
+
+# Node/Next.js
+node_modules/
+.next/
+dist/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic migrations
+alembic.ini
+migrations/versions/*.pyc
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Logs
+logs/
+
+# Misc
+*.swp
+*.swo
+
+# Frontend build
+out/
+
+# Ignore test coverage
+.coverage
+coverage/
+
+# Ignore frontend build artifacts
+build/
+
+# Ignore compiled TypeScript
+*.tsbuildinfo
+
+# Ignore package lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore IDE files
+.idea/
+*.iml
+
+# Ignore documentation build
+/docs/_build/
