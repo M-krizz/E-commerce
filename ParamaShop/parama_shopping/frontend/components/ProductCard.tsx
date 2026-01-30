@@ -8,6 +8,7 @@ export type Product = {
   price: number;
   stock?: number;
   image?: string;
+  shop_name?: string | null;
 };
 
 type ProductCardProps = {
@@ -26,6 +27,9 @@ export default function ProductCard({ product }: ProductCardProps) {
       <h3 className="font-semibold text-lg text-slate-900">{product.name}</h3>
       {product.category && (
         <p className="text-xs uppercase tracking-wide text-slate-500 mt-2">{product.category}</p>
+      )}
+      {product.shop_name && (
+        <p className="text-xs text-slate-500 mt-1">Sold by {product.shop_name}</p>
       )}
       {product.description && (
         <p className="text-slate-600 text-sm mt-1 line-clamp-2">

@@ -32,11 +32,24 @@ type LogEntry = {
   time?: string;
 };
 
+type SellerRequest = {
+  user_id: number;
+  user_name?: string;
+  user_email?: string;
+  shop_name?: string;
+  phone?: string;
+  address?: string;
+  category?: string;
+  status?: string;
+  created_at?: string;
+};
+
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"users" | "orders" | "logs">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "sellerRequests" | "orders" | "logs">("users");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [sellerRequests, setSellerRequests] = useState<SellerRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +61,10 @@ export default function AdminPage() {
         if (activeTab === "users") {
           const res = await api.get<AdminUser[]>("/admin/users");
           setUsers(res.data ?? []);
+        }
+        if (activeTab === "sellerRequests") {
+          const res = await api.get<SellerRequest[]>("/admin/seller-requests");
+          setSellerRequests(res.data ?? []);
         }
         if (activeTab === "orders") {
           const res = await api.get<AdminOrder[]>("/admin/orders");
@@ -77,6 +94,28 @@ export default function AdminPage() {
     }
   }
 
+  async function handleApproveSeller(id: number) {
+    setError(null);
+    try {
+      await api.post(`/admin/sellers/${id}/approve`);
+      const res = await api.get<SellerRequest[]>("/admin/seller-requests");
+      setSellerRequests(res.data ?? []);
+    } catch {
+      setError("Unable to approve seller.");
+    }
+  }
+
+  async function handleRejectSeller(id: number) {
+    setError(null);
+    try {
+      await api.post(`/admin/sellers/${id}/reject`);
+      const res = await api.get<SellerRequest[]>("/admin/seller-requests");
+      setSellerRequests(res.data ?? []);
+    } catch {
+      setError("Unable to reject seller.");
+    }
+  }
+
   return (
     <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
       <div className="min-h-screen bg-transparent text-slate-900">
@@ -86,7 +125,7 @@ export default function AdminPage() {
           <p className="text-slate-600 mt-1">Manage users, orders, and system logs.</p>
 
           <div className="mt-6 flex gap-4 text-sm font-medium">
-            {(["users", "orders", "logs"] as const).map((tab) => (
+            {(["users", "sellerRequests", "orders", "logs"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -95,6 +134,7 @@ export default function AdminPage() {
                 }`}
               >
                 {tab === "users" && "Users"}
+                {tab === "sellerRequests" && "Seller Requests"}
                 {tab === "orders" && "Orders"}
                 {tab === "logs" && "System Logs"}
               </button>
@@ -107,6 +147,54 @@ export default function AdminPage() {
               <Loader label="Loading admin data" />
             ) : activeTab === "users" ? (
               <AdminTable users={users} onToggle={handleToggle} />
+            ) : activeTab === "sellerRequests" ? (
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">User</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Email</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Shop</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Category</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {sellerRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">
+                          No pending seller requests.
+                        </td>
+                      </tr>
+                    ) : (
+                      sellerRequests.map((req) => (
+                        <tr key={req.user_id} className="hover:bg-slate-50">
+                          <td className="px-4 py-3 text-sm text-slate-700">{req.user_name || req.user_id}</td>
+                          <td className="px-4 py-3 text-sm text-slate-700">{req.user_email || "-"}</td>
+                          <td className="px-4 py-3 text-sm text-slate-700">{req.shop_name || "-"}</td>
+                          <td className="px-4 py-3 text-sm text-slate-700">{req.category || "-"}</td>
+                          <td className="px-4 py-3 text-sm text-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => handleApproveSeller(req.user_id)}
+                              className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRejectSeller(req.user_id)}
+                              className="ml-2 rounded-full bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-500"
+                            >
+                              Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             ) : activeTab === "orders" ? (
               <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <table className="min-w-full divide-y divide-slate-200">

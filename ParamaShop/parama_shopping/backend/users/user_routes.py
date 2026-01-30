@@ -87,6 +87,12 @@ def delete_user():
         if not user:
             logger.warning(f"User not found for delete: {user_id}")
             return error("User not found")
+        try:
+            if hasattr(user, "seller_profile") and user.seller_profile:
+                db.session.delete(user.seller_profile)
+                db.session.flush()
+        except Exception:
+            pass
         db.session.delete(user)
         db.session.commit()
         logger.info(f"User deleted: {user_id}")

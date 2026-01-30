@@ -15,6 +15,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const role = getProfile()?.role ?? ROLES.USER;
+  const sellerStatus = getProfile()?.seller_profile?.status;
 
   useEffect(() => {
     async function loadOrders() {
@@ -51,8 +52,23 @@ export default function OrdersPage() {
       <div className="min-h-screen bg-transparent text-slate-900">
         <Navbar />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <h1 className="text-2xl font-semibold">Order history</h1>
-          <p className="text-slate-600 mt-1">Track your recent purchases and delivery details.</p>
+          {sellerStatus && sellerStatus !== "APPROVED" && role === ROLES.USER ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+              <h1 className="text-2xl font-semibold">Seller verification pending</h1>
+              <p className="mt-2 text-slate-600">
+                Your seller request is awaiting admin approval. You can manage your status from the Seller Status page.
+              </p>
+              <a
+                href="/seller/pending"
+                className="mt-6 inline-flex items-center justify-center rounded-md bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                View seller status
+              </a>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-2xl font-semibold">Order history</h1>
+              <p className="text-slate-600 mt-1">Track your recent purchases and delivery details.</p>
 
           <div className="mt-6">
             {error && <ErrorToast message={error} />}
@@ -66,6 +82,8 @@ export default function OrdersPage() {
               </div>
             )}
           </div>
+            </>
+          )}
         </main>
       </div>
     </ProtectedRoute>

@@ -20,7 +20,7 @@ class User(db.Model):
 class SellerProfile(db.Model):
     __tablename__ = "seller_profiles"
     seller_profile_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id", ondelete="CASCADE"), unique=True)
     shop_name = db.Column(db.String(150))
     phone = db.Column(db.String(30))
     address = db.Column(db.String(255))
@@ -28,7 +28,7 @@ class SellerProfile(db.Model):
     status = db.Column(db.String(20), default="PENDING")
     approved_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    user = db.relationship("User", backref=db.backref("seller_profile", uselist=False))
+    user = db.relationship("User", backref=db.backref("seller_profile", uselist=False, cascade="all, delete-orphan"))
 
 class OTPVerification(db.Model):
     __tablename__ = "otp_verification"

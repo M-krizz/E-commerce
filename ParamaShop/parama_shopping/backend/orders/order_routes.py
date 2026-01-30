@@ -149,13 +149,31 @@ def place_order(user_id):
     data = request.json or {}
 
     items = data.get("items") or []
+    if not isinstance(items, list) or len(items) == 0:
+        return error("No items provided", 400)
     product_ids = [item.get("product_id") for item in items if item.get("product_id") is not None]
     seller_ids = set()
     if product_ids:
         products = Product.query.filter(Product.product_id.in_(product_ids)).all()
-        for p in products:
-            if p.seller_id is not None:
-                seller_ids.add(str(p.seller_id))
+        product_map = {p.product_id: p for p in products}
+        for item in items:
+            pid = item.get("product_id")
+            qty = item.get("quantity") or 0
+            if pid not in product_map:
+                return error("Invalid product in order", 400)
+            if qty <= 0:
+                return error("Invalid quantity in order", 400)
+            product = product_map[pid]
+            if product.stock is None or product.stock < qty:
+                return error(f"Insufficient stock for product {pid}", 400)
+        # apply stock deductions
+        for item in items:
+            pid = item.get("product_id")
+            qty = item.get("quantity") or 0
+            product = product_map[pid]
+            product.stock -= qty
+            if product.seller_id is not None:
+                seller_ids.add(str(product.seller_id))
     seller_id_token = "MULTI" if len(seller_ids) > 1 else (next(iter(seller_ids), None) or "UNKNOWN")
     transaction_decoded = generate_transaction_id(seller_id_token)
     transaction_encoded = base64_encode(transaction_decoded)

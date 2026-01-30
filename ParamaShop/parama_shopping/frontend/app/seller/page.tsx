@@ -15,6 +15,16 @@ type SellerOrder = {
   transaction_id?: string | null;
   created_at?: string;
   items?: { product_id?: number; name?: string; price?: number; quantity?: number }[];
+  delivery?: {
+    name?: string | null;
+    phone?: string | null;
+    address_line1?: string | null;
+    address_line2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postal_code?: string | null;
+    country?: string | null;
+  };
 };
 
 export default function SellerPage() {
@@ -52,14 +62,24 @@ export default function SellerPage() {
   }
 
   useEffect(() => {
+    let mounted = true;
     async function init() {
       setLoading(true);
       setError(null);
       await Promise.all([loadProducts(), loadOrders()]);
-      setLoading(false);
+      if (mounted) setLoading(false);
     }
     init();
-  }, []);
+    const interval = setInterval(() => {
+      if (mounted && activeTab === "orders") {
+        loadOrders();
+      }
+    }, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [activeTab]);
 
   function startEdit(product: Product) {
     setForm({
@@ -121,7 +141,7 @@ export default function SellerPage() {
           <h1 className="text-2xl font-semibold">Seller Panel</h1>
           <p className="text-slate-600 mt-1">Manage products and track orders.</p>
 
-          <div className="mt-6 flex gap-4 text-sm font-medium">
+          <div className="mt-6 flex gap-4 text-sm font-medium items-center">
             {(["products", "orders"] as const).map((tab) => (
               <button
                 key={tab}
@@ -133,6 +153,15 @@ export default function SellerPage() {
                 {tab === "products" ? "Products" : "Orders"}
               </button>
             ))}
+            {activeTab === "orders" && (
+              <button
+                type="button"
+                onClick={loadOrders}
+                className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-transparent"
+              >
+                Refresh
+              </button>
+            )}
           </div>
 
           <div className="mt-6">
@@ -248,12 +277,14 @@ export default function SellerPage() {
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">User</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Transaction</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Items</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Customer</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Address</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     {orders.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
+                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-500">
                           No orders yet.
                         </td>
                       </tr>
@@ -263,7 +294,29 @@ export default function SellerPage() {
                           <td className="px-4 py-3 text-sm text-slate-700">{order.order_id}</td>
                           <td className="px-4 py-3 text-sm text-slate-700">{order.user_id}</td>
                           <td className="px-4 py-3 text-sm text-slate-700">{order.transaction_id || "-"}</td>
-                          <td className="px-4 py-3 text-sm text-slate-700">{order.items?.length ?? 0}</td>
+                          <td className="px-4 py-3 text-sm text-slate-700">
+                            {(order.items ?? []).map((item, index) => (
+                              <div key={`${order.order_id}-${item.product_id ?? index}`} className="text-xs text-slate-600">
+                                {item.name || "Item"} × {item.quantity ?? 0}
+                              </div>
+                            ))}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-700">
+                            <div className="text-sm font-medium text-slate-700">{order.delivery?.name || "-"}</div>
+                            <div className="text-xs text-slate-500">{order.delivery?.phone || "-"}</div>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-slate-600">
+                            {[
+                              order.delivery?.address_line1,
+                              order.delivery?.address_line2,
+                              order.delivery?.city,
+                              order.delivery?.state,
+                              order.delivery?.postal_code,
+                              order.delivery?.country,
+                            ]
+                              .filter(Boolean)
+                              .join(", ") || "-"}
+                          </td>
                         </tr>
                       ))
                     )}

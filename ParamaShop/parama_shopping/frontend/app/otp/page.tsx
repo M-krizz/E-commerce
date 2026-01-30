@@ -31,15 +31,22 @@ export default function OtpPage() {
         "/auth/verify-otp",
         { user_id: userId, otp }
       );
-      if (res.data?.status === "success" && res.data.data?.token) {
-        setToken(res.data.data.token);
-        const profileRes = await api.get<{ status: string; data?: UserProfile }>("/user/profile");
+      const token = res.data?.data?.token;
+      if (res.data?.status === "success" && token) {
+        setToken(token);
+        const profileRes = await api.get<{ status: string; data?: UserProfile }>("/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (profileRes.data?.data) {
           setProfile(profileRes.data.data);
           const role = profileRes.data.data.role;
           const sellerStatus = profileRes.data.data.seller_profile?.status;
           if (role === ROLES.ADMIN) {
             router.replace("/admin");
+            return;
+          }
+          if (role === ROLES.SELLER && sellerStatus && sellerStatus !== "APPROVED") {
+            router.replace("/seller/pending");
             return;
           }
           if (role === ROLES.SELLER) {

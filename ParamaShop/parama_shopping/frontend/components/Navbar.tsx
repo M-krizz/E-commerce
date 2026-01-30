@@ -11,12 +11,32 @@ type NavItem = {
   label: string;
 };
 
-function getMenuForRole(role: number | null, authenticated: boolean): NavItem[] {
+function getMenuForRole(
+  role: number | null,
+  authenticated: boolean,
+  sellerStatus?: string
+): NavItem[] {
   if (!authenticated || role == null) {
     return [
       { href: "/home", label: "Home" },
       { href: "/products", label: "Products" },
       { href: "/login", label: "Login" },
+    ];
+  }
+  if (role === ROLES.SELLER && sellerStatus && sellerStatus !== "APPROVED") {
+    return [
+      { href: "/home", label: "Home" },
+      { href: "/products", label: "Products" },
+      { href: "/profile", label: "Profile" },
+      { href: "/seller/pending", label: "Seller Status" },
+    ];
+  }
+  if (role === ROLES.USER && sellerStatus && sellerStatus !== "APPROVED") {
+    return [
+      { href: "/home", label: "Home" },
+      { href: "/products", label: "Products" },
+      { href: "/profile", label: "Profile" },
+      { href: "/seller/pending", label: "Seller Status" },
     ];
   }
   if (role === ROLES.ADMIN) {
@@ -56,7 +76,8 @@ export default function Navbar() {
   const profile = mounted ? getProfile() : null;
   const authenticated = !!token;
   const role = profile?.role ?? null;
-  const menuItems = getMenuForRole(role, authenticated);
+  const sellerStatus = profile?.seller_profile?.status;
+  const menuItems = getMenuForRole(role, authenticated, sellerStatus);
 
   useEffect(() => {
     setMounted(true);
